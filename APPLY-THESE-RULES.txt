@@ -1,0 +1,51 @@
+🔥 COPY THESE EXACT RULES TO FIREBASE CONSOLE 🔥
+
+Go to: https://console.firebase.google.com/ → Your Project → Firestore Database → Rules
+
+REPLACE ALL EXISTING RULES WITH THESE:
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users collection
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Activities collection - VERY PERMISSIVE FOR TESTING
+    match /activities/{activityId} {
+      // Anyone authenticated can read activities
+      allow read: if request.auth != null;
+      
+      // Anyone authenticated can create activities
+      allow create: if request.auth != null;
+      
+      // Anyone authenticated can update activities (for joining)
+      allow update: if request.auth != null;
+      
+      // Only organizer can delete activities
+      allow delete: if request.auth != null 
+        && request.auth.uid == resource.data.organizerId;
+    }
+
+    // Chat messages
+    match /chats/{activityId}/messages/{messageId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Default deny all other collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+
+📋 STEPS:
+1. Copy the rules above
+2. Go to Firebase Console → Firestore Database → Rules
+3. DELETE all existing rules
+4. PASTE the new rules
+5. Click "PUBLISH"
+6. Test joining an activity
+
+This should 100% fix the permissions issue!

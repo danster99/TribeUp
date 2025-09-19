@@ -1,0 +1,25 @@
+🚨 EMERGENCY: ULTRA-PERMISSIVE RULES FOR TESTING 🚨
+
+COPY THESE TO FIREBASE CONSOLE - THESE ALLOW EVERYTHING:
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
+
+⚠️ WARNING: These rules allow ANYONE to read/write ANYTHING!
+⚠️ ONLY use for testing, then replace with secure rules!
+
+STEPS:
+1. Go to Firebase Console → Firestore Database → Rules
+2. REPLACE ALL rules with the above
+3. Click PUBLISH
+4. Test joining an activity immediately
+5. If it works, the issue was rules application
+6. Then replace with secure rules from APPLY-THESE-RULES.txt
+
+This will prove if Firebase rules are the problem!

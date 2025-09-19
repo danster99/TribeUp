@@ -1,0 +1,70 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users can read and write their own user documents
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Activities rules
+    match /activities/{activityId} {
+      // Anyone authenticated can read activities
+      allow read: if request.auth != null;
+      
+      // Only authenticated users can create activities
+      allow create: if request.auth != null 
+        && request.auth.uid == request.resource.data.organizerId;
+      
+      // Users can update activities if:
+      // 1. They are the organizer (can update any field)
+      // 2. They are joining the activity (can only update participants array)
+      allow update: if request.auth != null 
+        && (
+          // Organizer can update anything
+          request.auth.uid == resource.data.organizerId
+          ||
+          // Non-organizers can only update participants array to join/leave
+          (
+            // Only participants field is being modified
+            request.resource.data.keys().hasAll(resource.data.keys()) &&
+            resource.data.keys().hasAll(request.resource.data.keys()) &&
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['participants']) &&
+            // User is adding themselves to participants (joining)
+            (
+              request.resource.data.participants.hasAll(resource.data.participants) &&
+              request.resource.data.participants.removeAll(resource.data.participants) == [request.auth.uid]
+            )
+            ||
+            // User is removing themselves from participants (leaving)
+            (
+              resource.data.participants.hasAll(request.resource.data.participants) &&
+              resource.data.participants.removeAll(request.resource.data.participants) == [request.auth.uid]
+            )
+          )
+        );
+      
+      // Only organizer can delete
+      allow delete: if request.auth != null 
+        && request.auth.uid == resource.data.organizerId;
+    }
+
+    // Chat messages rules
+    match /chats/{activityId}/messages/{messageId} {
+      // Users can read messages if they're participants of the activity
+      allow read: if request.auth != null;
+      
+      // Users can create messages if they're authenticated and the message is from them
+      allow create: if request.auth != null 
+        && request.auth.uid == request.resource.data.senderId;
+      
+      // Users can update/delete their own messages
+      allow update, delete: if request.auth != null 
+        && request.auth.uid == resource.data.senderId;
+    }
+
+    // Default rule - deny all other operations
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

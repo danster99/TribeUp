@@ -1,0 +1,25 @@
+{
+  "rules": {
+    ".read": "auth != null",
+    ".write": "auth != null",
+    "messages": {
+      "$activityId": {
+        ".read": "auth != null",
+        ".write": "auth != null",
+        ".indexOn": ["createdAt"]
+      }
+    },
+    "lastRead": {
+      "$activityId": {
+        "$userId": {
+          ".read": "auth != null",
+          ".write": "auth != null"
+        }
+      }
+    },
+    "test": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    }
+  }
+}
